@@ -62,31 +62,34 @@ def _file_update_tags(name, tags, action="add", propagate=False):
     tags_filename = file_to_metapath(sought_file)
     file_tag_map = {}
 
-    with open(tags_filename, "r") as tags_file:
-        for line in tags_file:
-            try:
-                file_name, old_tags = line.split("\0")
-            except:
-                continue
+    try:
+        with open(tags_filename, "r") as tags_file:
+            for line in tags_file:
+                try:
+                    file_name, old_tags = line.split("\0")
+                except:
+                    continue
 
-            old_tags = [tag.strip() for tag in old_tags.split(",")]
-            if old_tags == [""]:
-                old_tags = []
+                old_tags = [tag.strip() for tag in old_tags.split(",")]
+                if old_tags == [""]:
+                    old_tags = []
 
-            if file_name == sought_file:
-                if action == "add":
-                    new_tag_set = set(old_tags) | set(tags)
-                elif action == "remove":
-                    new_tag_set = set(old_tags) - set(tags)
+                if file_name == sought_file:
+                    if action == "add":
+                        new_tag_set = set(old_tags) | set(tags)
+                    elif action == "remove":
+                        new_tag_set = set(old_tags) - set(tags)
+                    else:
+                        raise ValueError("Invalid operation: {}".format(action))
+
+                    if new_tag_set == set(old_tags):
+                        return
+                    else:
+                        file_tag_map[file_name] = sorted(new_tag_set)
                 else:
-                    raise ValueError("Invalid operation: {}".format(action))
-
-                if new_tag_set == set(old_tags):
-                    return
-                else:
-                    file_tag_map[file_name] = sorted(new_tag_set)
-            else:
-                file_tag_map[file_name] = sorted(old_tags)
+                    file_tag_map[file_name] = sorted(old_tags)
+    except:
+        pass  # file simply doesn't exist yet
 
     with open(tags_filename, "w") as tags_file:
         for file_name in sorted(file_tag_map.keys()):
@@ -114,6 +117,7 @@ def file_get_tags(name):
                     if tags == [""]:
                         tags = []
                     return tags
+            return []
     except IOError as e:
         if e.errno == 2:  # no such file, assume no tags
             return []
@@ -128,7 +132,7 @@ def file_remove_tags(name, tags):
 
 def _tag_update_files(tag, names, action="add", propagate=False):
     tag = tag.strip()
-    names = [file_path_normalize(name) for name in names]
+    set_names = set([file_path_normalize(name) for name in names])
 
     tag_filename = tag_to_metapath(tag)
     tagged_files = set()
@@ -142,9 +146,9 @@ def _tag_update_files(tag, names, action="add", propagate=False):
         pass  # tag doesn't exist, so we'll just be creating it
 
     if action == "add":
-        tagged_files |= set(names)
+        tagged_files |= set_names
     elif action == "remove":
-        tagged_files -= set(names)
+        tagged_files -= set_names
 
     try:
         os.makedirs(os.path.dirname(tag_filename))  # in case even the dir doesn't exist
@@ -159,13 +163,15 @@ def _tag_update_files(tag, names, action="add", propagate=False):
         for name in names:
             _file_update_tags(name, [tag], action)
 
-def tag_get_files(tag):
+def tag_get_files(tag, rel_paths=False):
     tagged_files = set()
 
     try:
         with open(tag_to_metapath(tag), "r") as tag_file:
             for line in tag_file:
-                tagged_files.add(line.strip())
+                # TODO: create relative paths from the absolute ones when
+                # requested
+                tagged_files.add(find_base_dir() + line.strip())
     except IOError as e:
         if e.errno == 2:  # no such file, assume no tags
             return []
