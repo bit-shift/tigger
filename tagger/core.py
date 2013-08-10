@@ -93,8 +93,9 @@ def _file_update_tags(name, tags, action="add", propagate=False):
                         file_tag_map[file_name] = sorted(new_tag_set)
                 else:
                     file_tag_map[file_name] = sorted(old_tags)
-    except:
-        pass  # file simply doesn't exist yet
+    except:  # file simply doesn't exist yet
+        if action == "add":
+            file_tag_map[sought_file] = sorted(set(tags))
 
     with open(tags_filename, "w") as tags_file:
         for file_name in sorted(file_tag_map.keys()):
