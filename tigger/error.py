@@ -2,7 +2,7 @@ import os.path
 
 class NotInTaggedDir(Exception):
     def __init__(self, path):
-        super().__init__( "'{}' is not inside a tagged directory.".format(
+        super().__init__( "'{}' is not inside a tracked directory.".format(
             os.path.abspath(path)))
 
 class InvalidTag(Exception):
