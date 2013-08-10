@@ -52,17 +52,20 @@ def tags(args):
             sys.stderr.write("ERROR: " + str(e) + "\n")
 
 def files(args):
-    for tag in args.tags:
-        try:
-            files = tigger.core.tag_get_files(tag, rel_paths=True)
-            if files == []:
-                sys.stdout.write("{} is an unused tag.\n".format(tag))
-            else:
-                sys.stdout.write("{}:\n".format(tag))
-                for filename in files:
-                    sys.stdout.write("\t{}\n".format(filename))
-        except tigger.error.InvalidTag as e:
-            sys.stderr.write("ERROR: " + str(e) + "\n")
+    try:
+        for tag in args.tags:
+            try:
+                files = tigger.core.tag_get_files(tag, rel_paths=True)
+                if files == []:
+                    sys.stdout.write("{} is an unused tag.\n".format(tag))
+                else:
+                    sys.stdout.write("{}:\n".format(tag))
+                    for filename in files:
+                        sys.stdout.write("\t{}\n".format(filename))
+            except tigger.error.InvalidTag as e:
+                sys.stderr.write("ERROR: " + str(e) + "\n")
+    except tigger.error.NotInTaggedDir as e:
+        sys.stderr.write("ERROR: " + str(e) + "\n")
 
 
 def main():
