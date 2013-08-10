@@ -1,4 +1,4 @@
-import argparse, os.path, sys, tigger.core, tigger.error
+import argparse, os, os.path, sys, tigger.core, tigger.error
 
 def file_exists(filename):
     if os.path.exists(filename):
@@ -67,6 +67,25 @@ def files(args):
     except tigger.error.NotInTaggedDir as e:
         sys.stderr.write("ERROR: " + str(e) + "\n")
 
+def mv(args):
+    args.out_filename = args.out_file.name
+    args.out_file.close()
+
+    try:
+        if tigger.core.file_get_tags(args.out_filename) != []:
+            sys.stderr.write(("ERROR: {} already exists and is tagged. " +
+                    "Aborting.\n").format(args.out_filename))
+            return
+        os.rename(args.in_filename, args.out_filename)
+        tags = tigger.core.file_get_tags(args.in_filename)
+        tigger.core.file_add_tags(args.out_filename, tags)
+        tigger.core.file_remove_tags(args.in_filename, tags)
+        sys.stdout.write("'{}' -> '{}'\n".format(args.in_filename,
+            args.out_filename))
+    except tigger.error.NotInTaggedDir as e:
+        sys.stderr.write("ERROR: " + str(e) + "\n")
+    except OSError as e:
+        sys.stderr.write("ERROR: " + str(e) + "\n")
 
 def main():
     parser = argparse.ArgumentParser(description="""Tagging tool for arbitrary
@@ -116,6 +135,14 @@ def main():
     files_command.add_argument("tags", nargs="+", metavar="TAG", help="""A tag to
             search for.""")
     files_command.set_defaults(subcommand=files)
+
+    mv_command = subparsers.add_parser("mv", description="""Move file,
+            preserving tags.""")
+    mv_command.add_argument("in_filename", metavar="SRC", help="""The file to
+            move.""", type=file_exists)
+    mv_command.add_argument("out_file", metavar="DEST", help="""The filename
+            to move it to.""", type=argparse.FileType("w"))
+    mv_command.set_defaults(subcommand=mv)
 
     try:
         args = parser.parse_args()
