@@ -21,21 +21,26 @@ def find_base_dir(start_dir="."):
         base_dir = os.path.dirname(base_dir)
     return base_dir
 
-def is_valid_tag(name):
-    return len(set(list(name)) - _valid_tag_characters) == 0
+def is_valid_tag(tag):
+    if len(tag) == 0:
+        return False
+    elif len(set(list(tag)) - _valid_tag_characters) == 0:
+        return True
+    else:
+        return False
 
-def tag_to_hash(name):
-    if not is_valid_tag(name):
-        raise tagger.error.InvalidTag(name)
-    return hashlib.sha1(name.encode("utf-8")).hexdigest()
+def tag_to_hash(tag):
+    if not is_valid_tag(tag):
+        raise tagger.error.InvalidTag(tag)
+    return hashlib.sha1(tag.encode("utf-8")).hexdigest()
 
-def tag_to_metapath(name):
-    hash = tag_to_hash(name)
+def tag_to_metapath(tag):
+    hash = tag_to_hash(tag)
     return os.path.join(find_base_dir(),
             _meta_dir_name,
             "tags",
             hash[:2],
-            name)
+            tag)
 
 def file_path_normalize(name):
     file_path = os.path.abspath(name)
