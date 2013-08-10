@@ -2,10 +2,10 @@
 from setuptools import setup
 
 setup(
-        name='Tigger',
-        version='0.1.0',
-        packages=['tigger',],
-        license='MIT',
+        name="Tigger",
+        version="0.1.0",
+        packages=["tigger",],
+        license="MIT",
         description="Command-line tagging tool.",
         long_description="Tigger is a command-line tagging tool written in " +
             "python, intended for tracking tags on files in a form which can " +
