@@ -69,6 +69,9 @@ def main():
     parser = argparse.ArgumentParser(description="""Tagging tool for arbitrary
         files.""")
 
+    parser.add_argument("--trace", action="store_true", help="""[DEBUG] Trace
+            the subcommand's execution.""")
+
     subparsers = parser.add_subparsers(title="subcommands")
 
     tag_command = subparsers.add_parser("init", description="""Initialize
@@ -115,12 +118,14 @@ def main():
         args = parser.parse_args()
 
         if args.subcommand is not None:
-            #import trace
-            #tracer = trace.Trace(ignoredirs=[sys.prefix, sys.exec_prefix],
-            #        trace=1, count=0)
-            #tracer.runctx('args.subcommand(args)', globals=globals(),
-            #        locals=locals())
-            args.subcommand(args)
+            if args.trace:
+                import trace
+                tracer = trace.Trace(ignoredirs=[sys.prefix, sys.exec_prefix],
+                        trace=1, count=0)
+                tracer.runctx('args.subcommand(args)', globals=globals(),
+                        locals=locals())
+            else:
+                args.subcommand(args)
     except IOError as e:
         sys.stderr.write("ERROR: " + e.strerror + "\n")
 
